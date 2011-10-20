@@ -4,7 +4,7 @@
 Debug = False
 
 # Imports
-import re, urllib, urllib2, simplejson, BeautifulSoup
+import re, urllib, urllib2, simplejson, datetime, BeautifulSoup
 import xbmc, xbmcgui, xbmcplugin, xbmcaddon
 
 __addon__ = xbmcaddon.Addon(id='plugin.audio.google.listen')
@@ -110,7 +110,9 @@ class Main:
       except: infoLabels['author'] = ''
       try: infoLabels['duration'] = str(entry['duration'])
       except: infoLabels['duration'] = str('')
-      try: infoLabels['date'] = entry['date']
+      try:
+        try: infoLabels['date'] = entry['date']
+        except: infoLabels['date'] = datetime.datetime.fromtimestamp(int(entry['crawlTimeMsec']) / 1000).strftime('%d.%m.%Y')
       except: infoLabels['date'] = ''
       try:
         try: infoLabels['size'] = int(entry['enclosure_length'])
