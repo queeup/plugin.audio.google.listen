@@ -52,9 +52,9 @@ class Main:
     if __settings__('google') == 'true':
       if Debug: self.LOG('\nGoogle subscription activated!')
 
-      Directories = [{'title':'My subscriptions', 'action':'mylist'},
-                     {'title':'Add New Subscriptions', 'action':'add'},
-                     {'title':'Search', 'action':'search'}]
+      Directories = [{'title':__language__(30101), 'action':'mylist'},
+                     {'title':__language__(30102), 'action':'add'},
+                     {'title':__language__(30103), 'action':'search'}]
     else:
       if Debug: self.LOG('\nGoogle subscription inactive!')
       Directories = [{'title':'Search', 'action':'search'}]
@@ -122,13 +122,13 @@ class Main:
       listitem = xbmcgui.ListItem(title, iconImage='DefaultVideo.png', thumbnailImage=thumb)
       listitem.setInfo(type='video', infoLabels=infoLabels)
       listitem.setProperty('IsPlayable', 'true')
-      contextmenu = [('More Episodes', 'XBMC.RunPlugin(%s?action=list&url=%s)' % (sys.argv[0], urllib.quote_plus(FEED_URL % feedurl)))]
+      contextmenu = [(__language__(30303), 'XBMC.RunPlugin(%s?action=list&url=%s)' % (sys.argv[0], urllib.quote_plus(FEED_URL % feedurl)))]
       if __settings__('google') == 'true':
-        contextmenu += [('Subscribe', 'XBMC.RunPlugin(%s?action=add_remove&url=%s&ac=%s)' % (sys.argv[0], urllib.quote_plus(feedurl), 'subscribe'))]
+        contextmenu += [(__language__(30301), 'XBMC.RunPlugin(%s?action=add_remove&url=%s&ac=%s)' % (sys.argv[0], urllib.quote_plus(feedurl), 'subscribe'))]
       listitem.addContextMenuItems(contextmenu, replaceItems=False)
       xbmcplugin.addDirectoryItems(int(sys.argv[1]), [(url, listitem, False)])
     if next_page:
-      listitem = xbmcgui.ListItem('More...', iconImage='DefaultVideo.png', thumbnailImage=__icon__)
+      listitem = xbmcgui.ListItem(__language__(30104), iconImage='DefaultVideo.png', thumbnailImage=__icon__)
       parameters = '%s?action=list&id=%s&page=%s' % (sys.argv[0], urllib.quote_plus(id), next_page)
       xbmcplugin.addDirectoryItem(int(sys.argv[1]), parameters, listitem, True)
     # Sort methods and content type...
@@ -155,7 +155,7 @@ class Main:
       url = entry['xmlurl']
       thumb = 'http://lfe-alpo-gm.appspot.com/img?url=' + entry['xmlurl']
       listitem = xbmcgui.ListItem(title, iconImage='DefaultFolder.png', thumbnailImage=thumb)
-      contextmenu = [('Unsubscribe', 'XBMC.RunPlugin(%s?action=add_remove&url=%s&ac=%s)' % (sys.argv[0], urllib.quote_plus(entry['xmlurl']), 'unsubscribe'))]
+      contextmenu = [(__language__(30302), 'XBMC.RunPlugin(%s?action=add_remove&url=%s&ac=%s)' % (sys.argv[0], urllib.quote_plus(entry['xmlurl']), 'unsubscribe'))]
       listitem.addContextMenuItems(contextmenu, replaceItems=True)
       parameters = '%s?action=list&url=%s' % (sys.argv[0], urllib.quote_plus(url))
       xbmcplugin.addDirectoryItems(int(sys.argv[1]), [(parameters, listitem, True)])
@@ -217,16 +217,16 @@ class Main:
 
     if urllib2.urlopen(request).read() == 'OK':
       if Debug: self.LOG('\n%s success' % ac)
-      xbmc.executebuiltin('XBMC.Notification("%s", "%s")' % ('Google Listen', '%s success' % ac))
+      xbmc.executebuiltin('XBMC.Notification("%s", "%s")' % (__language__(30000), '%s success' % ac))
       self.MYLIST()
     else:
       if Debug: self.LOG('\nError while %s' % ac)
-      xbmc.executebuiltin('XBMC.Notification("%s", "%s")' % ('Google Listen', 'Error whlie %s' % ac))
+      xbmc.executebuiltin('XBMC.Notification("%s", "%s")' % (__language__(30000), 'Error whlie %s' % ac))
 
   def SEARCH(self):
     if Debug: self.LOG('\nSEARCH function')
     kb = xbmc.Keyboard()
-    kb.setHeading('Enter Search Term')
+    kb.setHeading(__language__(30403))
     kb.doModal()
     if (kb.isConfirmed()):
       text = kb.getText()
@@ -237,7 +237,7 @@ class Main:
   def ADD(self):
     if Debug: self.LOG('\nADD function')
     kb = xbmc.Keyboard()
-    kb.setHeading('Enter URL')
+    kb.setHeading(__language__(30404))
     kb.setDefault('http://')
     kb.doModal()
     if (kb.isConfirmed()):
@@ -248,9 +248,9 @@ class Main:
 
   def FIRSTSTART(self):
     dialog = xbmcgui.Dialog()
-    ret = dialog.yesno('Google Listen',
-                       'Do you want to sign in your Google Account?',
-                       'If you sing in, you can subscribe podcasts!')
+    ret = dialog.yesno(__language__(30000),
+                       __language__(30401),
+                       __language__(30402))
     if ret:
       __addon__.openSettings()
       __set_settings__('firststart', 'false')
