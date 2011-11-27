@@ -1,4 +1,3 @@
-- add option for how many items show for list
 - Find out search option pagination or add n=100(?)
 - add next icon
 - add cache for url

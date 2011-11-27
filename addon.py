@@ -19,6 +19,7 @@ __language__ = __addon__.getLocalizedString
 __settings__ = __addon__.getSetting
 __set_settings__ = __addon__.setSetting
 
+per_page = (10, 15, 20, 50, 100, 500,)[int(__settings__('perpage'))]
 #SEARCH_URL = 'http://lfe-alpo-gm.appspot.com/search?q=%s&n=100'
 SEARCH_URL = 'http://lfe-alpo-gm.appspot.com/search?q=%s&start=0'
 #POPULAR_URL = 'http://lfe-alpo-gm.appspot.com/popular'
@@ -26,8 +27,8 @@ SUBSCRIPTIONS_URL = 'http://www.google.com/reader/public/subscriptions/user/-/la
 SUBSCRIPTIONS_URL_ALL = 'http://www.google.com/reader/api/0/subscription/list?output=json&client=XBMC'
 UNREAD_COUNT = 'http://www.google.com/reader/api/0/unread-count?all=true&output=json&client=XBMC'
 NEW_ITEMS = 'http://www.google.com/reader/api/0/stream/contents/user/-/label/Listen%20Subscriptions?r=n&xt=user/-/state/com.google/read&refresh=true'
-FEED_URL = 'http://www.google.com/reader/api/0/stream/contents/feed/%s?n=20&client=XBMC'
-FEED_URL_MORE = 'http://www.google.com/reader/api/0/stream/contents/%s?n=20&client=XBMC&c=%s'
+FEED_URL = 'http://www.google.com/reader/api/0/stream/contents/feed/%s?n=%s&client=XBMC'
+FEED_URL_MORE = 'http://www.google.com/reader/api/0/stream/contents/%s?n=%s&client=XBMC&c=%s'
 TOKEN_URL = 'http://www.google.com/reader/api/0/token'
 EDIT_URL = 'http://www.google.com/reader/api/0/subscription/edit?client=XBMC'
 AUTH_URL = 'https://www.google.com/accounts/ClientLogin'
@@ -44,15 +45,19 @@ class Main:
       self.ADD_REMOVE()
     elif ("action=add" in sys.argv[2]):
       self.ADD()
+    elif ("action=playall" in sys.argv[2]):
+      self.PLAYALL()
     else:
+      self.AUTH()
       self.START()
 
   def START(self):
     if Debug: self.LOG('\nSTART function')
     if __settings__('google') == 'true':
       if Debug: self.LOG('\nGoogle subscription activated!')
-
-      Directories = [{'title':__language__(30101), 'action':'mylist'},
+      # Get Authorization and store in settings
+      self.AUTH()
+      Directories = [{'title':'%s - %s: %s' % (__language__(30101), __language__(30105), self._COUNTNEW()), 'action':'mylist'},
                      {'title':__language__(30102), 'action':'add'},
                      {'title':__language__(30103), 'action':'search'}]
     else:
@@ -76,9 +81,9 @@ class Main:
     if ("action=search" in sys.argv[2]):
       URL = SEARCH_URL % self.SEARCH()
     try:
-      URL = FEED_URL % self.Arguments('url', unquote=False)
+      URL = FEED_URL % (self.Arguments('url', unquote=False), per_page)
     except:
-      URL = FEED_URL_MORE % (self.Arguments('id', unquote=False), self.Arguments('page'))
+      URL = FEED_URL_MORE % (self.Arguments('id', unquote=False), per_page, self.Arguments('page'))
     json = simplejson.loads(urllib.urlopen(URL).read())
     try:
       next_page = json['continuation']
@@ -122,9 +127,12 @@ class Main:
       listitem = xbmcgui.ListItem(title, iconImage='DefaultVideo.png', thumbnailImage=thumb)
       listitem.setInfo(type='video', infoLabels=infoLabels)
       listitem.setProperty('IsPlayable', 'true')
-      contextmenu = [(__language__(30303), 'XBMC.RunPlugin(%s?action=list&url=%s)' % (sys.argv[0], urllib.quote_plus(FEED_URL % feedurl)))]
+      contextmenu = [(__language__(30303), 'XBMC.RunPlugin(%s?action=list&url=%s)' % (sys.argv[0], urllib.quote_plus(FEED_URL % (feedurl, per_page))))]
       if __settings__('google') == 'true':
         contextmenu += [(__language__(30301), 'XBMC.RunPlugin(%s?action=add_remove&url=%s&ac=%s)' % (sys.argv[0], urllib.quote_plus(feedurl), 'subscribe'))]
+      # Play All context menu
+      # TODO: Not working yet. I need to find the way of send all links to play function from list function.
+      contextmenu += [(__language__(30304), 'XBMC.RunPlugin(%s?action=playall&url=%s)' % (sys.argv[0], urllib.quote_plus(URL)))]
       listitem.addContextMenuItems(contextmenu, replaceItems=False)
       xbmcplugin.addDirectoryItems(int(sys.argv[1]), [(url, listitem, False)])
     if next_page:
@@ -132,6 +140,7 @@ class Main:
       parameters = '%s?action=list&id=%s&page=%s' % (sys.argv[0], urllib.quote_plus(id), next_page)
       xbmcplugin.addDirectoryItem(int(sys.argv[1]), parameters, listitem, True)
     # Sort methods and content type...
+    #print '%s?playall_url=%s' % (sys.argv[0], playallitems)
     xbmcplugin.setContent(int(sys.argv[1]), 'movies')
     xbmcplugin.addSortMethod(int(sys.argv[1]), xbmcplugin.SORT_METHOD_UNSORTED)
     xbmcplugin.addSortMethod(int(sys.argv[1]), xbmcplugin.SORT_METHOD_VIDEO_TITLE)
@@ -143,11 +152,12 @@ class Main:
       xbmcplugin.addSortMethod(int(sys.argv[1]), xbmcplugin.SORT_METHOD_SIZE)
     # End of directory...
     xbmcplugin.endOfDirectory(int(sys.argv[1]), True)
+    # for playall
 
   def MYLIST(self):
     request = urllib2.Request(SUBSCRIPTIONS_URL)
     #request.add_data(urllib.urlencode(query_args))
-    request.add_header('Authorization', 'GoogleLogin auth=%s' % self.AUTH())
+    request.add_header('Authorization', 'GoogleLogin auth=%s' % __settings__('auth'))
     BeautifulSoup.BeautifulStoneSoup.NESTABLE_TAGS['outline'] = []
     soup = BeautifulSoup.BeautifulSOAP(urllib2.urlopen(request).read())
     for entry in soup.body.outline.findAll('outline'):
@@ -179,6 +189,7 @@ class Main:
       con.close()
       #print value
       result = re.compile('Auth=(.*)').findall(value)
+      __set_settings__('auth', result[0])
       return result[0]
     except:
       if Debug: self.LOG('\nAuthorization error!')
@@ -187,7 +198,7 @@ class Main:
   def TOKEN(self):
     if Debug: self.LOG('\nTOKEN function')
     request = urllib2.Request(TOKEN_URL)
-    request.add_header('Authorization', 'GoogleLogin auth=%s' % self.AUTH())
+    request.add_header('Authorization', 'GoogleLogin auth=%s' % __settings__('auth'))
     try:
       con = urllib2.urlopen(request)
       result = con.read()
@@ -213,7 +224,7 @@ class Main:
                   }
     request = urllib2.Request(EDIT_URL)
     request.add_data(urllib.urlencode(query_args))
-    request.add_header('Authorization', 'GoogleLogin auth=%s' % self.AUTH())
+    request.add_header('Authorization', 'GoogleLogin auth=%s' % __settings__('auth'))
 
     if urllib2.urlopen(request).read() == 'OK':
       if Debug: self.LOG('\n%s success' % ac)
@@ -245,6 +256,30 @@ class Main:
       self.ADD_REMOVE(feed=url, ac='subscribe')
     else:
       self.START()
+
+  def _COUNTNEW(self):
+    request = urllib2.Request(NEW_ITEMS)
+    request.add_header('Authorization', 'GoogleLogin auth=%s' % __settings__('auth'))
+    json = simplejson.loads(urllib2.urlopen(request).read())
+    return str(len(json['items']))
+
+  # TODO: Not working yet. I need to find the way of send all links to play function from list function.
+  def PLAYALL(self):
+    if Debug: self.LOG('\nPLAYALL function')
+    # Create Playlist video...
+    playlist = xbmc.PlayList(xbmc.PLAYLIST_VIDEO)
+    playlist.clear()
+    json = simplejson.loads(urllib.urlopen(self.Arguments('url')).read())
+    for entry in json['items']:
+      try:
+        try: url = entry['enclosure_href']
+        except: url = entry['enclosure'][0]['href']
+      except: url = ''
+      # add item to our playlist
+      playlist.add(url)
+    # Play video...
+    xbmcPlayer = xbmc.Player()
+    xbmcPlayer.play(playlist)
 
   def FIRSTSTART(self):
     dialog = xbmcgui.Dialog()

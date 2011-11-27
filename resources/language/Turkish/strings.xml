@@ -8,16 +8,19 @@
   <string id="30102">Yeni Abonelik Ekle</string>
   <string id="30103">Ara</string>
   <string id="30104">Daha Fazla...</string>
+  <string id="30105">Okunmamış</string>
   
   <!-- Settings -->
   <string id="30201">Google Girişi</string>
   <string id="30202">Kullanıcı Adı</string>
   <string id="30203">Parola</string>
+  <string id="30205">Sayfa başına gösterilecek öğe sayısı</string>
   
   <!-- Context Menu-->
   <string id="30301">Abone Ol</string>
   <string id="30302">Aboneliği Kaldır</string>
   <string id="30303">Daha Fazla Bölüm</string>
+  <string id="30304">Hepsini Yürüt</string>
   
   <!-- Dialog Text-->
   <string id="30401">Google hesabınıza giriş yapmak ister misiniz?</string>

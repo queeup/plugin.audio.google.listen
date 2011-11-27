@@ -8,16 +8,19 @@
   <string id="30102">Add New Subscriptions</string>
   <string id="30103">Search</string>
   <string id="30104">More...</string>
+  <string id="30105">Unread</string>  
   
   <!-- Settings -->
   <string id="30202">Google Sing In</string>
   <string id="30203">User Name</string>
   <string id="30204">Password</string>
+  <string id="30205">Number of items per page</string>
 
   <!-- Context Menu-->
   <string id="30301">Subscribe</string>
   <string id="30302">Unsubscribe</string>
   <string id="30303">More Episodes</string>
+  <string id="30304">Play All</string>
   
   <!-- Dialog Text-->
   <string id="30401">Do you want to sign in your Google Account?</string>
