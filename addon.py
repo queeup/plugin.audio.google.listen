@@ -19,9 +19,8 @@ __language__ = __addon__.getLocalizedString
 __settings__ = __addon__.getSetting
 __set_settings__ = __addon__.setSetting
 
-per_page = (10, 15, 20, 50, 100, 500,)[int(__settings__('perpage'))]
 #SEARCH_URL = 'http://lfe-alpo-gm.appspot.com/search?q=%s&n=100'
-SEARCH_URL = 'http://lfe-alpo-gm.appspot.com/search?q=%s&start=0'
+SEARCH_URL = 'http://lfe-alpo-gm.appspot.com/search?q=%s&start=%s&n=' + __settings__('perpage')
 #POPULAR_URL = 'http://lfe-alpo-gm.appspot.com/popular'
 SUBSCRIPTIONS_URL = 'http://www.google.com/reader/public/subscriptions/user/-/label/Listen%20Subscriptions'
 SUBSCRIPTIONS_URL_ALL = 'http://www.google.com/reader/api/0/subscription/list?output=json&client=XBMC'
@@ -57,7 +56,7 @@ class Main:
       if Debug: self.LOG('\nGoogle subscription activated!')
       # Get Authorization and store in settings
       self.AUTH()
-      Directories = [{'title':'%s - %s: %s' % (__language__(30101), __language__(30105), self._COUNTNEW()), 'action':'mylist'},
+      Directories = [{'title':'%s - %s' % (__language__(30101), self._COUNTNEW()), 'action':'mylist'},
                      {'title':__language__(30102), 'action':'add'},
                      {'title':__language__(30103), 'action':'search'}]
     else:
@@ -79,11 +78,23 @@ class Main:
   def LIST(self):
     if Debug: self.LOG('\nLIST function')
     if ("action=search" in sys.argv[2]):
-      URL = SEARCH_URL % self.SEARCH()
-    try:
-      URL = FEED_URL % (self.Arguments('url', unquote=False), per_page)
-    except:
-      URL = FEED_URL_MORE % (self.Arguments('id', unquote=False), per_page, self.Arguments('page'))
+      try:
+        search_next_page = True
+        search_page = int(self.Arguments('search_page', unquote=False)) + int(__settings__('perpage')) + 1
+        query = self.Arguments('q', unquote=False)
+        URL = SEARCH_URL % (query, str(search_page))
+        print URL
+      except:
+        search_next_page = True
+        search_page = 0
+        query = self.SEARCH()
+        URL = SEARCH_URL % (query, search_page)
+        print URL
+    if ("action=list" in sys.argv[2]):
+      try:
+        URL = FEED_URL % (self.Arguments('url', unquote=False), __settings__('perpage'))
+      except:
+        URL = FEED_URL_MORE % (self.Arguments('id', unquote=False), __settings__('perpage'), self.Arguments('page'))
     json = simplejson.loads(urllib.urlopen(URL).read())
     try:
       next_page = json['continuation']
@@ -127,11 +138,10 @@ class Main:
       listitem = xbmcgui.ListItem(title, iconImage='DefaultVideo.png', thumbnailImage=thumb)
       listitem.setInfo(type='video', infoLabels=infoLabels)
       listitem.setProperty('IsPlayable', 'true')
-      contextmenu = [(__language__(30303), 'XBMC.RunPlugin(%s?action=list&url=%s)' % (sys.argv[0], urllib.quote_plus(FEED_URL % (feedurl, per_page))))]
+      contextmenu = [(__language__(30303), 'XBMC.RunPlugin(%s?action=list&url=%s)' % (sys.argv[0], urllib.quote_plus(FEED_URL % (feedurl, __settings__('perpage')))))]
       if __settings__('google') == 'true':
         contextmenu += [(__language__(30301), 'XBMC.RunPlugin(%s?action=add_remove&url=%s&ac=%s)' % (sys.argv[0], urllib.quote_plus(feedurl), 'subscribe'))]
       # Play All context menu
-      # TODO: Not working yet. I need to find the way of send all links to play function from list function.
       contextmenu += [(__language__(30304), 'XBMC.RunPlugin(%s?action=playall&url=%s)' % (sys.argv[0], urllib.quote_plus(URL)))]
       listitem.addContextMenuItems(contextmenu, replaceItems=False)
       xbmcplugin.addDirectoryItems(int(sys.argv[1]), [(url, listitem, False)])
@@ -139,6 +149,11 @@ class Main:
       listitem = xbmcgui.ListItem(__language__(30104), iconImage='DefaultVideo.png', thumbnailImage=__icon__)
       parameters = '%s?action=list&id=%s&page=%s' % (sys.argv[0], urllib.quote_plus(id), next_page)
       xbmcplugin.addDirectoryItem(int(sys.argv[1]), parameters, listitem, True)
+    ## Google Listen api not allowedmore than >20. so it's not usefull.
+    #if search_next_page:
+    #  listitem = xbmcgui.ListItem(__language__(30104), iconImage='DefaultVideo.png', thumbnailImage=__icon__)
+    #  parameters = '%s?action=search&q=%s&search_page=%s' % (sys.argv[0], query, str(search_page))
+    #  xbmcplugin.addDirectoryItem(int(sys.argv[1]), parameters, listitem, True)
     # Sort methods and content type...
     #print '%s?playall_url=%s' % (sys.argv[0], playallitems)
     xbmcplugin.setContent(int(sys.argv[1]), 'movies')
@@ -261,9 +276,11 @@ class Main:
     request = urllib2.Request(NEW_ITEMS)
     request.add_header('Authorization', 'GoogleLogin auth=%s' % __settings__('auth'))
     json = simplejson.loads(urllib2.urlopen(request).read())
-    return str(len(json['items']))
+    if len(json['items']) > 0:
+      return '%s' % (__language__(30105) % str(len(json['items'])))
+    else:
+      return '%s' % __language__(30106)
 
-  # TODO: Not working yet. I need to find the way of send all links to play function from list function.
   def PLAYALL(self):
     if Debug: self.LOG('\nPLAYALL function')
     # Create Playlist video...
@@ -271,12 +288,14 @@ class Main:
     playlist.clear()
     json = simplejson.loads(urllib.urlopen(self.Arguments('url')).read())
     for entry in json['items']:
+      title = entry['title']
       try:
         try: url = entry['enclosure_href']
         except: url = entry['enclosure'][0]['href']
       except: url = ''
       # add item to our playlist
-      playlist.add(url)
+      listitem = xbmcgui.ListItem(title, iconImage="DefaultVideo.png", thumbnailImage=__icon__)
+      playlist.add(url, listitem)
     # Play video...
     xbmcPlayer = xbmc.Player()
     xbmcPlayer.play(playlist)

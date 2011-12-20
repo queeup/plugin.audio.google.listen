@@ -8,13 +8,14 @@
   <string id="30102">Yeni Abonelik Ekle</string>
   <string id="30103">Ara</string>
   <string id="30104">Daha Fazla...</string>
-  <string id="30105">Okunmamış</string>
+  <string id="30105">[COLOR=FF00FF00]%s[/COLOR] [B]yeni bölüm[/B]</string>
+  <string id="30106">[B][I]yeni bölüm yok[/I][/B]</string>
   
   <!-- Settings -->
   <string id="30201">Google Girişi</string>
   <string id="30202">Kullanıcı Adı</string>
   <string id="30203">Parola</string>
-  <string id="30205">Sayfa başına gösterilecek öğe sayısı</string>
+  <string id="30204">Sayfa başına gösterilecek öğe sayısı</string>
   
   <!-- Context Menu-->
   <string id="30301">Abone Ol</string>

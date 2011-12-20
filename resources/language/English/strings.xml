@@ -8,13 +8,14 @@
   <string id="30102">Add New Subscriptions</string>
   <string id="30103">Search</string>
   <string id="30104">More...</string>
-  <string id="30105">Unread</string>  
+  <string id="30105">[COLOR=FF00FF00]%s[/COLOR] [B]new episode(s)[/B]</string>
+  <string id="30106">[B][I]no new episode[/I][/B]</string>  
   
   <!-- Settings -->
-  <string id="30202">Google Sing In</string>
-  <string id="30203">User Name</string>
-  <string id="30204">Password</string>
-  <string id="30205">Number of items per page</string>
+  <string id="30201">Google Sing In</string>
+  <string id="30202">User Name</string>
+  <string id="30203">Password</string>
+  <string id="30204">Number of items per page</string>
 
   <!-- Context Menu-->
   <string id="30301">Subscribe</string>
